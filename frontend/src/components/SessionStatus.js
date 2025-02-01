@@ -100,7 +100,7 @@ function SessionStatus() {
     };
   
     startSession();
-  }, [transactionId, sessionStarted]); // Add sessionStarted to prevent re-execution
+  }, [transactionId, sessionStarted, amountPaid, deviceId, energySelected]); // Add sessionStarted to prevent re-execution
   useEffect(() => {
     if (!charging || !relayStartTime) return;
   
@@ -143,23 +143,23 @@ function SessionStatus() {
     }, 5000);
   
     return () => clearInterval(interval);
-  }, [charging, relayStartTime]);  // ✅ Add relayStartTime as a dependency
+  }, [charging, relayStartTime, amountPaid, deviceId, energySelected]);  // ✅ Add relayStartTime as a dependency
   
   
   
 // Function to upload session data
-const uploadSessionData = async (data) => {
-  try {
-    await axios.post("http://localhost:5000/api/sessions/update", {
-      sessionId: data.sessionId,
-      energyConsumed: data.energyConsumed,
-      amountUsed: data.amountUsed,
-    });
-    console.log("Session data updated in MongoDB");
-  } catch (error) {
-    console.error("Failed to update session data:", error);
-  }
-};
+//const uploadSessionData = async (data) => {
+ // try {
+  //  await axios.post("http://localhost:5000/api/sessions/update", {
+   //   sessionId: data.sessionId,
+    //  energyConsumed: data.energyConsumed,
+    //  amountUsed: data.amountUsed,
+   // });
+  //  console.log("Session data updated in MongoDB");
+ // } catch (error) {
+  //  console.error("Failed to update session data:", error);
+//  }
+// };
 
 const startCharging = () => {
   console.log("🚀 Attempting to Start Charging...");
