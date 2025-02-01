@@ -4,7 +4,6 @@
   "proxy": "http://localhost:5000",
   "private": true,
   "dependencies": {
-     "react-app-rewired": "^2.2.1",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/material": "^6.3.1",
@@ -55,6 +54,7 @@
     ]
   },
   "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "react-app-rewired": "^2.2.1"
   }
 }
