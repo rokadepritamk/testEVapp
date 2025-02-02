@@ -16,7 +16,7 @@ app.use(cors());
 app.use(express.json());
 app.use("/api/sessions", sessionRoutes);
 app.use(cors({
-    origin: 'http://localhost:3000',  // Allow requests only from your frontend URL
+    origin: '*',  // Allow requests only from your frontend URL
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed HTTP methods
     allowedHeaders: ['Content-Type', 'Authorization'], // Allow certain headers
   }));
