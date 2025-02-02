@@ -94,7 +94,7 @@
   }
   
   /* Mobile-Specific Styling */
-  @media (max-width: 480px) {
+  @media (max-width: 460px) {
   
     .tagline {
       font-size: 12px;
