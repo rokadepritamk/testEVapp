@@ -1,7 +1,7 @@
 /* Container with a fixed width for mobile screens */
 .session-container {
-    max-width: 400px; /* Restricts width to fit mobile screens */
-    width: 100%;
+    max-width: 380px; /* Restricts width to fit mobile screens */
+    width: 95%;
     margin: auto;
     display: flex;
     flex-direction: column;
@@ -12,7 +12,7 @@
   
   /* Top Card with gradient background */
   .top-card {
-    width: 100%;
+    width: 90%;
     background: linear-gradient(135deg, #c002d1, #3e0170);
     color: white;
     padding: 12px;
@@ -57,7 +57,7 @@
   
   /* Progress Bar */
   .progress-bar {
-    width: 100%;
+    width: 85%;
     height: 15px;
     background: #ddd;
     border-radius: 8px;
