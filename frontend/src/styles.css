@@ -115,7 +115,7 @@
   }
   
   /* Mobile-Specific Styling */
-  @media (max-width: 480px) {
+  @media (max-width: 400px) {
     .glowing-ring {
       width: 100px;
       height: 100px;
