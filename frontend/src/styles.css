@@ -10,29 +10,7 @@
     min-height: 100vh;
   }
   
-  /* Logo with Glowing Ring */
-  .logo-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 30px;
-  }
-  
-  .glowing-ring {
-    width: 180px;
-    height: 180px;
-    border-radius: 60%;
-    background: radial-gradient(circle, #8e04a0, transparent 60%);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .logo {
-    width: 150px;
-    height: auto;
-  }
-  
+
   .tagline {
     font-family: "display sans font", Ethnocentric;
     margin-top: 1px;

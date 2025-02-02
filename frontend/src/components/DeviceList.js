@@ -40,10 +40,9 @@ function DeviceList() {
 
   return (
     <div className="app-container">
-      {/* Logo with Glowing Ring */}
-      <div className="logo-container">
+
         <p className="tagline">EV Charging App</p>
-      </div>
+    
 
       {/* Device List */}
       <div className="device-list">
