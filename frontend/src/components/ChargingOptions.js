@@ -92,7 +92,6 @@ function ChargingOptions() {
                 name: "Sparx Energy",
                 description: "Charging Session Payment",
                 handler: function (response) {
-                    alert("Payment Successful: " + response.razorpay_payment_id);
                     const transactionId = response.razorpay_payment_id; // Payment ID
                     navigate(`/session-status/${transactionId}`, {
                         state: {
