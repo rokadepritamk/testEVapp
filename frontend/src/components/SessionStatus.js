@@ -76,7 +76,7 @@ function SessionStatus() {
   
     const startSession = async () => {
       try {
-        const response = await axios.post("http://localhost:5000/api/sessions/start", {
+        const response = await axios.post("https://testevapp-2.onrender.com/api/sessions/start", {
           transactionId,
           deviceId,
           amountPaid,
@@ -123,7 +123,7 @@ function SessionStatus() {
           amountPaid,
         });
   
-        axios.post("http://localhost:5000/api/sessions/update", {
+        axios.post("https://testevapp-2.onrender.com/api/sessions/update", {
           sessionId: prev.sessionId,
           energyConsumed: totalEnergyConsumed,
           amountUsed: totalAmountUsed,
@@ -150,7 +150,7 @@ function SessionStatus() {
 // Function to upload session data
 //const uploadSessionData = async (data) => {
  // try {
-  //  await axios.post("http://localhost:5000/api/sessions/update", {
+  //  await axios.post("https://testevapp-2.onrender.com/api/sessions/update", {
    //   sessionId: data.sessionId,
     //  energyConsumed: data.energyConsumed,
     //  amountUsed: data.amountUsed,
@@ -201,7 +201,7 @@ const stopCharging = async (triggerType = "manual") => {
   console.log("Sending stop session request:", sessionPayload);
 
   try {
-    await axios.post("http://localhost:5000/api/sessions/stop", sessionPayload);
+    await axios.post("https://testevapp-2.onrender.com/api/sessions/stop", sessionPayload);
     console.log("Session stopped successfully");
     navigate("/");
   } catch (error) {

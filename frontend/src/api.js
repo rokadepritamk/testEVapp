@@ -1,6 +1,7 @@
 import axios from 'axios';
-const BASE_URL = "http://localhost:5000"; // Or your actual backend URL
-const API_URL = 'http://localhost:5000';
+const BASE_URL = "https://testevapp-2.onrender.com"; // Or your actual backend URL
+const API_URL = 'https://testevapp-2.onrender.com';
+const API_BASE_URL = "https://testevapp-2.onrender.com";
 
 export const getDevices = () => axios.get(`${API_URL}/devices`);
 export const saveSession = (sessionData) =>
@@ -9,7 +10,7 @@ export const saveSession = (sessionData) =>
   export const endSession = (sessionData) =>
     axios.post(`${BASE_URL}/sessions/end`, sessionData);
   export const startSession = async (transactionId, deviceId) => {
-    return fetch("http://localhost:5000/api/sessions/start", {
+    return fetch("https://testevapp-2.onrender.com/api/sessions/start", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ transactionId, deviceId }),
