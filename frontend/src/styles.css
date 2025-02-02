@@ -12,16 +12,16 @@
   
 
   .tagline {
-    font-family: "display sans font", Ethnocentric;
-    margin-top: 1px;
-    font-size: 10px;
-    color: #390a91;
+    font-family: "Arial", sans-serif;
+    margin-top: 10px;
+    font-size: 14px;
+    color: #c302d4;
     text-align: center;
   }
   
   /* Device List */
   .device-list {
-    width: 80%;
+    width: 90%;
     max-width: 350px;
     display: flex;
     flex-direction: column;
@@ -44,7 +44,7 @@
     border: 2px solid #eee;
     border-radius: 12px;
     padding: 10px;
-    width: 80%;
+    width: 95%;
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   }
   
@@ -93,15 +93,7 @@
   }
   
   /* Mobile-Specific Styling */
-  @media (max-width: 400px) {
-    .glowing-ring {
-      width: 100px;
-      height: 100px;
-    }
-  
-    .logo {
-      width: 50px;
-    }
+  @media (max-width: 480px) {
   
     .tagline {
       font-size: 12px;

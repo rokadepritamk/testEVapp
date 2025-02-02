@@ -154,9 +154,7 @@ function ChargingOptions() {
                 ,
             }}>
                 <CardContent >
-                <Typography variant="h7" textAlign="center"  >
-                       Device:
-                    </Typography>
+                    <Typography variant="h7" textAlign="center">DeviceID</Typography>
                     <Typography variant="h5" textAlign="center" gutterBottom sx={{ fontSize: "1.4rem" }}>
                      {deviceDetails.device_id}
                     </Typography>
