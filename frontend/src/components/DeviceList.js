@@ -42,10 +42,7 @@ function DeviceList() {
     <div className="app-container">
       {/* Logo with Glowing Ring */}
       <div className="logo-container">
-        <div className="glowing-ring">
-          <img src="./logo.png" alt="Logo" className="logo" />
-        </div>
-        <p className="tagline">SAFE - EFFICIENT - RELIABLE</p>
+        <p className="tagline">EV Charging App</p>
       </div>
 
       {/* Device List */}
