@@ -79,7 +79,7 @@ function SessionStatus() {
 
     const fetchISTTime = async () => {
       try {
-        const response = await axios.get("http://worldtimeapi.org/api/timezone/Asia/Kolkata");
+        const response = await axios.get("https://worldtimeapi.org/api/timezone/Asia/Kolkata");
         const { datetime } = response.data; // Get the correct IST datetime
         return new Date(datetime); // Convert to JavaScript Date object
       } catch (error) {
