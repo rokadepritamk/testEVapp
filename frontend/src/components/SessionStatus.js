@@ -290,7 +290,7 @@ function SessionStatus() {
 
           {/* Stop Charging Button */}
           {charging && (
-            <button className=".stop-charging-btn" onClick={() => stopCharging("manual")}>
+            <button onClick={() => stopCharging("manual")}>
               Stop Charging
             </button>
           )}
