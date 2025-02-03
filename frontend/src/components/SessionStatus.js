@@ -215,7 +215,76 @@ function SessionStatus() {
     }
   };
 
-  return <div>{/* UI Components (Same as before) */}</div>;
+  return (
+    <div className="session-container">
+      {sessionData ? (
+        <>
+          {/* 🔍 Debugging UI Rendering */}
+          {console.log("🔍 UI Debug: Rendering session data:", sessionData)}
+  
+          {/* Top Card: Displays Session Details */}
+          <div className="top-card">
+            <p><strong>Device ID:</strong> {sessionData?.deviceId || "Unknown"}</p>
+            <p><strong>Session ID:</strong> {sessionData?.sessionId || "N/A"}</p>
+            <p><strong>Start Date & Time:</strong> {sessionData?.startDate || "N/A"} {sessionData?.startTime || "N/A"}</p>
+            <p className={`status ${charging ? "charging" : "stopped"}`}>
+              {charging ? "Charging in Progress" : "Charging Stopped"}
+            </p>
+          </div>
+  
+          {/* Charging Progress Section */}
+          <div className="charging-progress-card">
+            <div className="charging-info">
+              <p className="large-text">{amountPaid ?? 0} ₹</p>
+              <p className="small-text">Total Amount Paid</p>
+  
+              <p className="large-text">{energySelected ?? 0} kWh</p>
+              <p className="small-text">Energy Selected</p>
+  
+              <p className="large-text">{(sessionData.amountUsed ?? 0).toFixed(2)} ₹</p>
+              <p className="small-text">Amount Used</p>
+  
+              {/* Progress Bar */}
+              <div className="progress-bar">
+                <div
+                  className="progress-fill"
+                  style={{
+                    width: `${(sessionData.amountUsed / (amountPaid || 1)) * 100}%`,
+                  }}
+                ></div>
+              </div>
+            </div>
+          </div>
+  
+          {/* Live Data Display */}
+          <div className="live-data">
+            <div className="live-value">
+              <p className="large-text">{sessionData.voltage ?? 0} V</p>
+              <p className="small-text">Voltage</p>
+            </div>
+            <div className="live-value">
+              <p className="large-text">{sessionData.current ?? 0} A</p>
+              <p className="small-text">Current</p>
+            </div>
+            <div className="live-value">
+              <p className="large-text">{(sessionData.energyConsumed ?? 0).toFixed(3)} kWh</p>
+              <p className="small-text">Energy Consumed</p>
+            </div>
+          </div>
+  
+          {/* Stop Charging Button */}
+          {charging && (
+            <button onClick={() => stopCharging("manual")}>
+              Stop Charging
+            </button>
+          )}
+        </>
+      ) : (
+        <p>Loading session data...</p> // Fallback UI to prevent blank screen
+      )}
+    </div>
+  );
+  
 }
 
 export default SessionStatus;
