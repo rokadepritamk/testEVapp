@@ -88,7 +88,6 @@ function SessionStatus() {
       }
     };
 
-
     const startSession = async () => {
       try {
         const response = await axios.post("https://testevapp-2.onrender.com/api/sessions/start", {
@@ -98,20 +97,27 @@ function SessionStatus() {
           energySelected,
         });
         console.log("Session started successfully:", response.data);
-    
-        // Fetch correct IST date & time from API
-        const istDateTime = await fetchISTTime();
-    
-        // Format date & time in Indian Standard Time
-        const formattedDate = istDateTime.toLocaleDateString("en-IN"); // DD/MM/YYYY
-        const formattedTime = istDateTime.toLocaleTimeString("en-IN", { hour12: true });
-    
+
+        const { sessionId, startTime, startDate } = response.data;
         setSessionData((prev) => ({
           ...prev,
-          sessionId: response.data.sessionId,
+          sessionId,
+          startTime,
+          startDate,
+        }));
+
+        // Fetch correct IST date & time from API
+        const istDateTime = await fetchISTTime();
+        const formattedDate = istDateTime.toLocaleDateString("en-IN"); // DD/MM/YYYY
+        const formattedTime = istDateTime.toLocaleTimeString("en-IN", { hour12: true });
+
+        setSessionData((prev) => ({
+          ...prev,
           startDate: formattedDate,
           startTime: formattedTime,
         }));
+
+        setSessionStarted(true); // Prevent duplicate session creation
       } catch (error) {
         console.error("Failed to start session:", error.response?.data || error.message);
       }
@@ -125,19 +131,13 @@ function SessionStatus() {
     if (sessionStarted) {
       console.log("⚡ Session started, attempting to start charging...");
       startCharging();
-    }else {
-      console.log("⏳ Waiting for session to start...");
     }
   }, [sessionStarted]);
-
-  useEffect(() => {
-    console.log("🔍 Debug relayStartTime:", relayStartTime);
-  }, [relayStartTime]);
 
   // Energy Calculation and Updates
   useEffect(() => {
     if (!charging || !relayStartTime) return;
-    console.log("🔍 Debug relayStartTime:", relayStartTime);
+
     const interval = setInterval(() => {
       setSessionData((prev) => {
         if (!prev.voltage || !prev.current) return prev; // Avoid NaN calculations
@@ -190,14 +190,11 @@ function SessionStatus() {
       return;
     }
 
-    mqttClient.publish(TOPIC_RELAY_CONTROL, "ON", (error) => {
-      if (error) {
-        console.error("❌ Failed to publish ON command:", error);
-      } else {
-        console.log("✅ Charging Started via MQTT");
-        setRelayStartTime(Date.now());
-        setCharging(true);
-      }
+    console.log("📡 Publishing MQTT ON Command...");
+    mqttClient.publish(TOPIC_RELAY_CONTROL, "ON", () => {
+      console.log("✅ Charging Started via MQTT");
+      setRelayStartTime(Date.now());
+      setCharging(true);
     });
   };
 
@@ -238,9 +235,9 @@ function SessionStatus() {
     <div className="session-container">
       {sessionData ? (
         <>
-          {/* 🔍 Debugging UI Rendering */}
+          {/* Debugging UI Rendering */}
           {console.log("🔍 UI Debug: Rendering session data:", sessionData)}
-  
+
           {/* Top Card: Displays Session Details */}
           <div className="top-card">
             <p><strong>Device ID:</strong> {sessionData?.deviceId || "Unknown"}</p>
@@ -250,19 +247,19 @@ function SessionStatus() {
               {charging ? "Charging in Progress" : "Charging Stopped"}
             </p>
           </div>
-  
+
           {/* Charging Progress Section */}
           <div className="charging-progress-card">
             <div className="charging-info">
               <p className="large-text">{amountPaid ?? 0} ₹</p>
               <p className="small-text">Total Amount Paid</p>
-  
+
               <p className="large-text">{energySelected ?? 0} kWh</p>
               <p className="small-text">Energy Selected</p>
-  
+
               <p className="large-text">{(sessionData.amountUsed ?? 0).toFixed(2)} ₹</p>
               <p className="small-text">Amount Used</p>
-  
+
               {/* Progress Bar */}
               <div className="progress-bar">
                 <div
@@ -274,7 +271,7 @@ function SessionStatus() {
               </div>
             </div>
           </div>
-  
+
           {/* Live Data Display */}
           <div className="live-data">
             <div className="live-value">
@@ -290,7 +287,7 @@ function SessionStatus() {
               <p className="small-text">Energy Consumed</p>
             </div>
           </div>
-  
+
           {/* Stop Charging Button */}
           {charging && (
             <button onClick={() => stopCharging("manual")}>
@@ -303,7 +300,6 @@ function SessionStatus() {
       )}
     </div>
   );
-  
 }
 
 export default SessionStatus;
