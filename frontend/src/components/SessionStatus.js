@@ -125,6 +125,8 @@ function SessionStatus() {
     if (sessionStarted) {
       console.log("⚡ Session started, attempting to start charging...");
       startCharging();
+    }else {
+      console.log("⏳ Waiting for session to start...");
     }
   }, [sessionStarted]);
 
@@ -135,7 +137,7 @@ function SessionStatus() {
   // Energy Calculation and Updates
   useEffect(() => {
     if (!charging || !relayStartTime) return;
-
+    console.log("🔍 Debug relayStartTime:", relayStartTime);
     const interval = setInterval(() => {
       setSessionData((prev) => {
         if (!prev.voltage || !prev.current) return prev; // Avoid NaN calculations
@@ -188,10 +190,14 @@ function SessionStatus() {
       return;
     }
 
-    mqttClient.publish(TOPIC_RELAY_CONTROL, "ON", () => {
-      console.log("✅ Charging Started via MQTT");
-      setRelayStartTime(Date.now());
-      setCharging(true);
+    mqttClient.publish(TOPIC_RELAY_CONTROL, "ON", (error) => {
+      if (error) {
+        console.error("❌ Failed to publish ON command:", error);
+      } else {
+        console.log("✅ Charging Started via MQTT");
+        setRelayStartTime(Date.now());
+        setCharging(true);
+      }
     });
   };
 
