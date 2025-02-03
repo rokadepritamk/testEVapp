@@ -90,12 +90,19 @@ function SessionStatus() {
         );
         console.log("Session started successfully:", response.data);
 
-        const { sessionId, startTime, startDate } = response.data;
+          // Convert date and time properly
+    const rawDate = response.data.startDate; // Assuming format "2/3/2025"
+    const rawTime = response.data.startTime; // Assuming format "7:07:15 PM"
+
+    const parsedDate = new Date(rawDate + " " + rawTime); // Convert to Date object
+    const formattedDate = parsedDate.toLocaleDateString("en-IN"); // Convert to DD/MM/YYYY
+    const formattedTime = parsedDate.toLocaleTimeString("en-IN", { hour12: true });
+
         setSessionData((prev) => ({
           ...prev,
-          sessionId,
-          startTime,
-          startDate,
+          sessionId: response.data.sessionId,
+          startDate: formattedDate,
+          startTime: formattedTime,
         }));
 
         setSessionStarted(true); // Prevent duplicate session creation
