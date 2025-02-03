@@ -77,35 +77,41 @@ function SessionStatus() {
   useEffect(() => {
     if (!transactionId || sessionStarted) return;
 
+    const fetchISTTime = async () => {
+      try {
+        const response = await axios.get("http://worldtimeapi.org/api/timezone/Asia/Kolkata");
+        const { datetime } = response.data; // Get the correct IST datetime
+        return new Date(datetime); // Convert to JavaScript Date object
+      } catch (error) {
+        console.error("Failed to fetch IST time:", error);
+        return new Date(); // Fallback to system time if API fails
+      }
+    };
+
+
     const startSession = async () => {
       try {
-        const response = await axios.post(
-          "https://testevapp-2.onrender.com/api/sessions/start",
-          {
-            transactionId,
-            deviceId,
-            amountPaid,
-            energySelected,
-          }
-        );
+        const response = await axios.post("https://testevapp-2.onrender.com/api/sessions/start", {
+          transactionId,
+          deviceId,
+          amountPaid,
+          energySelected,
+        });
         console.log("Session started successfully:", response.data);
-
-          // Convert date and time properly
-    const rawDate = response.data.startDate; // Assuming format "2/3/2025"
-    const rawTime = response.data.startTime; // Assuming format "7:07:15 PM"
-
-    const parsedDate = new Date(rawDate + " " + rawTime); // Convert to Date object
-    const formattedDate = parsedDate.toLocaleDateString("en-IN"); // Convert to DD/MM/YYYY
-    const formattedTime = parsedDate.toLocaleTimeString("en-IN", { hour12: true });
-
+    
+        // Fetch correct IST date & time from API
+        const istDateTime = await fetchISTTime();
+    
+        // Format date & time in Indian Standard Time
+        const formattedDate = istDateTime.toLocaleDateString("en-IN"); // DD/MM/YYYY
+        const formattedTime = istDateTime.toLocaleTimeString("en-IN", { hour12: true });
+    
         setSessionData((prev) => ({
           ...prev,
           sessionId: response.data.sessionId,
           startDate: formattedDate,
           startTime: formattedTime,
         }));
-
-        setSessionStarted(true); // Prevent duplicate session creation
       } catch (error) {
         console.error("Failed to start session:", error.response?.data || error.message);
       }
