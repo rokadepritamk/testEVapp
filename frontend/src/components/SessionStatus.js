@@ -46,7 +46,7 @@ function SessionStatus() {
 
     client.on("connect", () => {
       console.log("✅ Connected to MQTT broker");
-      setMqttClient(client); // Set client after successful connection
+      setMqttClient(client);
 
       client.subscribe([TOPIC_VOLTAGE, TOPIC_CURRENT], (err) => {
         if (err) console.error("Failed to subscribe to topics");
@@ -73,6 +73,18 @@ function SessionStatus() {
     };
   }, [deviceId]);
 
+  // Prevent page refresh during active session
+  useEffect(() => {
+    window.onbeforeunload = () => {
+      if (charging) {
+        return "Are you sure you want to leave? The session is active.";
+      }
+    };
+    return () => {
+      window.onbeforeunload = null;
+    };
+  }, [charging]);
+
   // Start session when transactionId is available
   useEffect(() => {
     if (!transactionId || sessionStarted) return;
@@ -80,7 +92,7 @@ function SessionStatus() {
     const fetchISTTime = async () => {
       try {
         const response = await axios.get("https://worldtimeapi.org/api/timezone/Asia/Kolkata");
-        const { datetime } = response.data; // Get the correct IST datetime
+        const { datetime } = response.data;
         return new Date(datetime); // Convert to JavaScript Date object
       } catch (error) {
         console.error("Failed to fetch IST time:", error);
@@ -106,7 +118,6 @@ function SessionStatus() {
           startDate,
         }));
 
-        // Fetch correct IST date & time from API
         const istDateTime = await fetchISTTime();
         const formattedDate = istDateTime.toLocaleDateString("en-IN"); // DD/MM/YYYY
         const formattedTime = istDateTime.toLocaleTimeString("en-IN", { hour12: true });
@@ -142,7 +153,7 @@ function SessionStatus() {
       setSessionData((prev) => {
         if (!prev.voltage || !prev.current) return prev; // Avoid NaN calculations
         const durationHours = (Date.now() - relayStartTime) / (1000 * 60 * 60);
-        if (durationHours <= 0) return prev; // Prevent negative values
+        if (durationHours <= 0) return prev;
         const newEnergy = (prev.voltage * prev.current * durationHours) / 1000; // kWh
         const totalEnergyConsumed = prev.energyConsumed + newEnergy;
         const totalAmountUsed = totalEnergyConsumed * FIXED_RATE_PER_KWH;
@@ -225,7 +236,6 @@ function SessionStatus() {
     try {
       await axios.post("https://testevapp-2.onrender.com/api/sessions/stop", sessionPayload);
       console.log("Session stopped successfully");
-      navigate("/");
     } catch (error) {
       console.error("Failed to stop session:", error);
     }
@@ -290,7 +300,7 @@ function SessionStatus() {
 
           {/* Stop Charging Button */}
           {charging && (
-            <button onClick={() => stopCharging("manual")}>
+            <button className="stop-button" onClick={() => stopCharging("manual")}>
               Stop Charging
             </button>
           )}
