@@ -40,7 +40,7 @@ function ChargingOptions() {
         const fetchDeviceDetails = async () => {
             setIsLoading(true);
             try {
-                const response = await fetch(`https://testevapp-2.onrender.com/api/devices/${device_id}`);
+                const response = await fetch(`http://localhost:5000/api/devices/${device_id}`);
                 if (!response.ok) throw new Error("Failed to fetch device details.");
 
                 const data = await response.json();

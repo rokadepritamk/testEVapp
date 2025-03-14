@@ -8,6 +8,7 @@ module.exports = function override(config) {
     util: require.resolve('util/'),
     buffer: require.resolve('buffer/'),
     process: require.resolve('process/browser'),
+    
   };
   config.plugins = (config.plugins || []).concat([
     new webpack.ProvidePlugin({

@@ -16,47 +16,146 @@ const TOPIC_RELAY_CONTROL = "device/relayControl"; // For starting/stopping char
 
 function SessionStatus() {
   const { transactionId } = useParams();
-  const navigate = useNavigate();
   const location = useLocation();
   const { deviceId, amountPaid, energySelected } = location.state || {};
 
-  const [sessionStarted, setSessionStarted] = useState(false);
-  const [sessionData, setSessionData] = useState({
+const [sessionData, setSessionData] = useState(() => {
+  return JSON.parse(localStorage.getItem("activeSession")) || {
     deviceId: deviceId || "Unknown Device",
     sessionId: "",
+    transactionId: "",
     startTime: "",
     startDate: "",
     voltage: 0,
     current: 0,
     energyConsumed: 0,
     amountUsed: 0,
-  });
+  };
+});
 
-  const [charging, setCharging] = useState(false);
-  const [relayStartTime, setRelayStartTime] = useState(null);
-  const FIXED_RATE_PER_KWH = 20; // ₹20 per kWh
-  const [mqttClient, setMqttClient] = useState(null);
+const [charging, setCharging] = useState(false);
+const [relayStartTime, setRelayStartTime] = useState(null);
+const FIXED_RATE_PER_KWH = 20; // ₹20 per kWh
+const [mqttClient, setMqttClient] = useState(null);
+const [sessionStarted, setSessionStarted] = useState(false);
+
+
+useEffect(() => {
+  const checkActiveSession = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/sessions/active`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data) {
+        console.log("✅ Active session found:", response.data);
+        setSessionData(response.data);
+        localStorage.setItem("activeSession", JSON.stringify(response.data));
+        setCharging(true);
+        return;
+      }
+    } catch (error) {
+      console.warn("⚠️ No active session found. Proceeding to start a new session.");
+    }
+
+    if (transactionId) startSession();
+  };
+
+  checkActiveSession();
+}, [transactionId, deviceId]);
+
+const startSession = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    
+    if (!token) {
+      console.error("⚠️ No authentication token found!");
+      return;
+    }
+
+    console.log("🔹 Checking session data before request:", { deviceId, transactionId, amountPaid, energySelected });
+
+    if (!deviceId || !transactionId) {
+      console.error("⚠️ Missing deviceId or transactionId!");
+      return;
+    }
+
+    let sessionId = "session_" + new Date().getTime(); // ✅ Define first
+
+
+       // ✅ Convert current time to IST (GMT+5:30)
+    const now = new Date();
+    const istOffset = 5.5 * 60 * 60 * 1000; // ✅ Convert hours to milliseconds
+    const istDate = new Date(now.getTime() + istOffset); // ✅ Adjust to IST
+
+    const formattedDate = istDate.toISOString().split("T")[0]; // ✅ Extract YYYY-MM-DD
+    const formattedTime = istDate.toISOString(); // ✅ Full ISO time for accuracy
+
+    console.log("📤 Sending session start request:", { sessionId, transactionId, formattedTime, amountPaid, energySelected });
+    const requestBody = {
+      sessionId,
+      deviceId,
+      transactionId,
+      startTime: formattedTime,
+      startDate: formattedDate,
+      amountPaid,  // ✅ Send amountPaid
+      energySelected,  // ✅ Send energySelected
+    };
+
+    const response = await axios.post(
+      "http://localhost:5000/api/sessions/start",
+      requestBody,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    console.log("🟢 Server Response:", response.data); // ✅ Debug response
+
+    const data = response.data;
+
+    if (!data.sessionId) {
+      console.error("⚠️ Server did not return a valid sessionId!");
+      return;
+    }
+
+    console.log("✅ Session started successfully:", data);
+
+    setSessionData((prev) => ({
+      ...prev,
+      sessionId: data.sessionId || sessionId,  // ✅ Use sessionId from request if missing in response
+      startTime: formattedTime,
+      startDate: formattedDate,
+      amountPaid,  // ✅ Send amountPaid
+      energySelected,  // ✅ Send energySelected
+    }));
+
+    setSessionStarted(true);
+  } catch (error) {
+    console.error("❌ Failed to start session:", error.message);
+  }
+};
+
+useEffect(() => {
+  localStorage.setItem("activeSession", JSON.stringify(sessionData));
+}, [sessionData]);
+  
 
   // Establish MQTT Connection
   useEffect(() => {
     const client = mqtt.connect(`wss://${MQTT_BROKER_URL}:${MQTT_PORT}/mqtt`, {
       username: MQTT_USER,
       password: MQTT_PASSWORD,
+      rejectUnauthorized: false, // ✅ Fix for secure WebSocket connections
     });
 
     client.on("connect", () => {
       console.log("✅ Connected to MQTT broker");
       setMqttClient(client);
-
-      client.subscribe([TOPIC_VOLTAGE, TOPIC_CURRENT], (err) => {
-        if (err) console.error("Failed to subscribe to topics");
-      });
-
-      if (deviceId) {
-        client.subscribe(`ev/device/${deviceId}/status`, (err) => {
-          if (err) console.error("Failed to subscribe to device status:", err);
-        });
-      }
+      client.subscribe([TOPIC_VOLTAGE, TOPIC_CURRENT]);
+      if (deviceId) client.subscribe(`ev/device/${deviceId}/status`);
     });
 
     client.on("message", (topic, message) => {
@@ -68,9 +167,7 @@ function SessionStatus() {
       }));
     });
 
-    return () => {
-      if (client) client.end();
-    };
+    return () => client.end();
   }, [deviceId]);
 
   // Prevent page refresh during active session
@@ -84,66 +181,6 @@ function SessionStatus() {
       window.onbeforeunload = null;
     };
   }, [charging]);
-
-  // Start session when transactionId is available
-  useEffect(() => {
-    if (!transactionId || sessionStarted) return;
-
-    const fetchISTTime = async () => {
-      try {
-        const response = await axios.get("https://worldtimeapi.org/api/timezone/Asia/Kolkata");
-        const { datetime } = response.data;
-        return new Date(datetime); // Convert to JavaScript Date object
-      } catch (error) {
-        console.error("Failed to fetch IST time:", error);
-        return new Date(); // Fallback to system time if API fails
-      }
-    };
-
-    const startSession = async () => {
-      try {
-        const response = await axios.post("https://testevapp-2.onrender.com/api/sessions/start", {
-          transactionId,
-          deviceId,
-          amountPaid,
-          energySelected,
-        });
-        console.log("Session started successfully:", response.data);
-
-        const { sessionId, startTime, startDate } = response.data;
-        setSessionData((prev) => ({
-          ...prev,
-          sessionId,
-          startTime,
-          startDate,
-        }));
-
-        const istDateTime = await fetchISTTime();
-        const formattedDate = istDateTime.toLocaleDateString("en-IN"); // DD/MM/YYYY
-        const formattedTime = istDateTime.toLocaleTimeString("en-IN", { hour12: true });
-
-        setSessionData((prev) => ({
-          ...prev,
-          startDate: formattedDate,
-          startTime: formattedTime,
-        }));
-
-        setSessionStarted(true); // Prevent duplicate session creation
-      } catch (error) {
-        console.error("Failed to start session:", error.response?.data || error.message);
-      }
-    };
-
-    startSession();
-  }, [transactionId, sessionStarted, amountPaid, deviceId, energySelected]);
-
-  // Start charging when session starts
-  useEffect(() => {
-    if (sessionStarted) {
-      console.log("⚡ Session started, attempting to start charging...");
-      startCharging();
-    }
-  }, [sessionStarted]);
 
   // Energy Calculation and Updates
   useEffect(() => {
@@ -169,7 +206,7 @@ function SessionStatus() {
         });
 
         axios
-          .post("https://testevapp-2.onrender.com/api/sessions/update", {
+          .post("http://localhost:5000/api/sessions/update", {
             sessionId: prev.sessionId,
             energyConsumed: totalEnergyConsumed,
             amountUsed: totalAmountUsed,
@@ -190,7 +227,7 @@ function SessionStatus() {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [charging, relayStartTime, amountPaid, deviceId, energySelected]);
+  }, [charging, relayStartTime]);
 
   // Start Charging Function
   const startCharging = () => {
@@ -207,8 +244,7 @@ function SessionStatus() {
       setRelayStartTime(Date.now());
       setCharging(true);
     });
-  };
-
+  }; 
   // Stop Charging Function
   const stopCharging = async (triggerType = "manual") => {
     console.warn("⚠️ stopCharging() Triggered:", triggerType);
@@ -226,21 +262,41 @@ function SessionStatus() {
     }
 
     setCharging(false);
+    
+    const now = new Date();
+    const istDate = new Date(now.getTime()); // ✅ Adjust to IST
+    const formattedTime = istDate.toISOString(); // ✅ Full ISO time for accuracy
 
     const sessionPayload = {
       sessionId: sessionData.sessionId,
-      endTime: new Date().toISOString(),
+      endTime: formattedTime,
       endTrigger: triggerType,
     };
-
+  
     try {
-      await axios.post("https://testevapp-2.onrender.com/api/sessions/stop", sessionPayload);
-      console.log("Session stopped successfully");
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("❌ No authentication token found!");
+        return;
+      }
+  
+      console.log("📤 Sending stop session request:", sessionPayload);
+  
+      const response = await axios.post(
+        "http://localhost:5000/api/sessions/stop",
+        sessionPayload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+  
+      console.log("✅ Session stopped successfully:", response.data);
+  
+      // Optional: Clear session data after stopping
+      localStorage.removeItem("activeSession");
+      setSessionData(null);
     } catch (error) {
-      console.error("Failed to stop session:", error);
+      console.error("❌ Failed to stop session:", error.response?.data || error.message);
     }
   };
-
   return (
     <div className="session-container">
       {sessionData ? (
@@ -299,11 +355,10 @@ function SessionStatus() {
           </div>
 
           {/* Stop Charging Button */}
-          {charging && (
             <button className="stop-button" onClick={() => stopCharging("manual")}>
               Stop Charging
             </button>
-          )}
+          
         </>
       ) : (
         <p>Loading session data...</p> // Fallback UI to prevent blank screen
